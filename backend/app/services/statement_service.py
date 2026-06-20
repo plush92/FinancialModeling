@@ -34,15 +34,15 @@ class StatementServiceBase(CRUDService):
         )
 
 
-class IncomeStatementService(StatementServiceBase[IncomeStatement, IncomeStatementCreate, IncomeStatementUpdate]):
+class IncomeStatementService(StatementServiceBase):
     model = IncomeStatement
 
 
-class BalanceSheetService(StatementServiceBase[BalanceSheet, BalanceSheetCreate, BalanceSheetUpdate]):
+class BalanceSheetService(StatementServiceBase):
     model = BalanceSheet
 
 
-class CashFlowStatementService(StatementServiceBase[CashFlowStatement, CashFlowStatementCreate, CashFlowStatementUpdate]):
+class CashFlowStatementService(StatementServiceBase):
     model = CashFlowStatement
 
 

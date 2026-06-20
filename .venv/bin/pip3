@@ -1,4 +1,4 @@
-#!/Users/brendanduffy/Documents/FinancialModeling/.venv/bin/python3.12
+#!/Users/brendanduffy/Documents/FinancialModeling/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
