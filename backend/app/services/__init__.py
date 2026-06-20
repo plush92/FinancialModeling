@@ -1,3 +1,4 @@
 from app.services.company_service import CompanyService
 from app.services.financial_ratio_service import FinancialRatioService
+from app.services.sec_edgar_service import SecEdgarService
 from app.services.statement_service import BalanceSheetService, CashFlowStatementService, IncomeStatementService

@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     )
     sqlalchemy_echo: bool = Field(default=False, alias="SQLALCHEMY_ECHO")
     auto_create_tables: bool = Field(default=False, alias="AUTO_CREATE_TABLES")
+    sec_user_agent: str = Field(
+        default="Financial Modeling Platform contact@example.com",
+        alias="SEC_USER_AGENT",
+    )
+    sec_request_timeout_seconds: int = Field(default=30, alias="SEC_REQUEST_TIMEOUT_SECONDS")
 
 
 @lru_cache

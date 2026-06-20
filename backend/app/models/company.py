@@ -16,6 +16,7 @@ class Company(Base, TimestampMixin):
     __tablename__ = "companies"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    cik: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
     ticker: Mapped[str] = mapped_column(String(16), unique=True, nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     sector: Mapped[str | None] = mapped_column(String(120), nullable=True)

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +11,9 @@ class CashFlowStatementBase(BaseModel):
     fiscal_year: int = Field(ge=1900, le=2100)
     period_type: PeriodType
     currency: str = Field(default="USD", min_length=3, max_length=3)
+    source_accession_number: str | None = Field(default=None, max_length=32)
+    source_filing_date: date | None = None
+    source_form: str | None = Field(default=None, max_length=12)
     net_income: Decimal
     depreciation_and_amortization: Decimal = Field(default=Decimal("0"))
     change_in_working_capital: Decimal = Field(default=Decimal("0"))
@@ -34,6 +37,9 @@ class CashFlowStatementUpdate(BaseModel):
     fiscal_year: int | None = Field(default=None, ge=1900, le=2100)
     period_type: PeriodType | None = None
     currency: str | None = Field(default=None, min_length=3, max_length=3)
+    source_accession_number: str | None = Field(default=None, max_length=32)
+    source_filing_date: date | None = None
+    source_form: str | None = Field(default=None, max_length=12)
     net_income: Decimal | None = None
     depreciation_and_amortization: Decimal | None = None
     change_in_working_capital: Decimal | None = None

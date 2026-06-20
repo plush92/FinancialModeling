@@ -38,4 +38,5 @@ This backend is a FastAPI service designed to store and serve financial model da
 - `app/services/company_service.py`: company CRUD and lookup helpers.
 - `app/services/statement_service.py`: shared CRUD logic for financial statements.
 - `app/services/financial_ratio_service.py`: Pandas-driven ratio calculations.
+- `app/services/sec_edgar_service.py`: SEC ticker lookup, filing download, XBRL mapping, and persistence.
 - `app/api/v1/routes/*.py`: REST endpoints for each domain object.
