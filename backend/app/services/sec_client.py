@@ -19,6 +19,8 @@ class SECClient:
     submissions_url_template = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
     company_facts_url_template = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 
+    _ticker_map_cache: dict[str, Any] | None = None
+
     def _request_json(self, url: str) -> dict[str, Any]:
         request = Request(url, headers={"User-Agent": settings.sec_user_agent})
         try:
@@ -29,7 +31,9 @@ class SECClient:
             raise SECClientError(f"SEC request failed for {url}: {exc}") from exc
 
     def resolve_cik(self, ticker: str) -> int:
-        payload = self._request_json(self.ticker_map_url)
+        if self._ticker_map_cache is None:
+            self._ticker_map_cache = self._request_json(self.ticker_map_url)
+        payload = self._ticker_map_cache
         normalized = ticker.upper().strip()
         for row in payload.values():
             if str(row.get("ticker", "")).upper() == normalized:

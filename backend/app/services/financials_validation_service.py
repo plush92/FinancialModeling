@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+import json
 
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,7 @@ class FinancialsValidationService:
 
     def log_warning(self, ticker: str, category: str, message: str, company_id: int | None = None, context: str | None = None) -> None:
         self.warning_count += 1
+        serialized_context = self._serialize_context(context)
         self.db.add(
             IngestionException(
                 ticker=ticker,
@@ -25,7 +27,27 @@ class FinancialsValidationService:
                 level="warning",
                 category=category,
                 message=message,
-                context=context,
+                context=serialized_context,
+            )
+        )
+
+    def log_error(
+        self,
+        ticker: str,
+        category: str,
+        message: str,
+        company_id: int | None = None,
+        context: dict[str, object] | str | None = None,
+    ) -> None:
+        serialized_context = self._serialize_context(context)
+        self.db.add(
+            IngestionException(
+                ticker=ticker,
+                company_id=company_id,
+                level="error",
+                category=category,
+                message=message,
+                context=serialized_context,
             )
         )
 
@@ -58,6 +80,13 @@ class FinancialsValidationService:
                 message=f"Missing values in {statement_type} for {fiscal_year}-{fiscal_period}: {', '.join(missing_fields)}",
                 company_id=company_id,
             )
+
+    def _serialize_context(self, context: dict[str, object] | str | None) -> str | None:
+        if context is None:
+            return None
+        if isinstance(context, str):
+            return context
+        return json.dumps(context, default=str)
 
     def is_duplicate_period(self, model: type, company_id: int, fiscal_year: int, fiscal_period: str) -> bool:
         return (
