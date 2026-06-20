@@ -21,6 +21,7 @@ class Settings(BaseSettings):
         alias="SEC_USER_AGENT",
     )
     sec_request_timeout_seconds: int = Field(default=30, alias="SEC_REQUEST_TIMEOUT_SECONDS")
+    reconciliation_tolerance_pct: float = Field(default=1.0, alias="RECONCILIATION_TOLERANCE_PCT")
 
 
 @lru_cache

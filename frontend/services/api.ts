@@ -1,4 +1,4 @@
-import type { FinancialsResponse } from "../types/financials";
+import type { FinancialsResponse, IssuesResponse, QualityResponse } from "../types/financials";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -18,3 +18,12 @@ export async function syncTicker(ticker: string): Promise<void> {
 export async function getFinancials(ticker: string): Promise<FinancialsResponse> {
   return request<FinancialsResponse>(`/financials/${ticker}`);
 }
+
+export async function getQuality(ticker: string): Promise<QualityResponse> {
+  return request<QualityResponse>(`/quality/${ticker}`);
+}
+
+export async function getIssues(ticker: string): Promise<IssuesResponse> {
+  return request<IssuesResponse>(`/issues/${ticker}`);
+}
+

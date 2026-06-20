@@ -45,3 +45,33 @@ export type FinancialsResponse = {
   balance_sheets: BalanceSheet[];
   cash_flow_statements: CashFlowStatement[];
 };
+
+export type QualityResponse = {
+  quality_score: number;
+  warnings: string[];
+  errors: string[];
+};
+
+export type ValidationIssue = {
+  id: number;
+  severity: string;
+  rule_name: string;
+  description: string;
+  filing_id: number | null;
+  created_at: string;
+};
+
+export type MappingException = {
+  id: number;
+  xbrl_tag: string | null;
+  attempted_field: string;
+  confidence: number | null;
+  notes: string | null;
+  filing_id: number | null;
+  created_at: string;
+};
+
+export type IssuesResponse = {
+  validation_issues: ValidationIssue[];
+  mapping_exceptions: MappingException[];
+};

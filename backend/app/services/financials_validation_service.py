@@ -10,6 +10,8 @@ from app.models.balance_sheet import BalanceSheet
 from app.models.cash_flow_statement import CashFlowStatement
 from app.models.ingestion_exception import IngestionException
 from app.models.income_statement import IncomeStatement
+from app.models.mapping_exception import MappingException
+from app.models.validation_issue import ValidationIssue
 
 
 class FinancialsValidationService:
@@ -17,7 +19,15 @@ class FinancialsValidationService:
         self.db = db
         self.warning_count = 0
 
-    def log_warning(self, ticker: str, category: str, message: str, company_id: int | None = None, context: str | None = None) -> None:
+    def log_warning(
+        self,
+        ticker: str,
+        category: str,
+        message: str,
+        company_id: int | None = None,
+        context: str | None = None,
+        filing_id: int | None = None,
+    ) -> None:
         self.warning_count += 1
         serialized_context = self._serialize_context(context)
         self.db.add(
@@ -30,6 +40,16 @@ class FinancialsValidationService:
                 context=serialized_context,
             )
         )
+        if company_id is not None:
+            self.db.add(
+                ValidationIssue(
+                    severity="warning",
+                    rule_name=category,
+                    description=message,
+                    company_id=company_id,
+                    filing_id=filing_id,
+                )
+            )
 
     def log_error(
         self,
@@ -38,6 +58,7 @@ class FinancialsValidationService:
         message: str,
         company_id: int | None = None,
         context: dict[str, object] | str | None = None,
+        filing_id: int | None = None,
     ) -> None:
         serialized_context = self._serialize_context(context)
         self.db.add(
@@ -48,6 +69,36 @@ class FinancialsValidationService:
                 category=category,
                 message=message,
                 context=serialized_context,
+            )
+        )
+        if company_id is not None:
+            self.db.add(
+                ValidationIssue(
+                    severity="error",
+                    rule_name=category,
+                    description=message,
+                    company_id=company_id,
+                    filing_id=filing_id,
+                )
+            )
+
+    def log_mapping_exception(
+        self,
+        company_id: int,
+        filing_id: int | None,
+        attempted_field: str,
+        xbrl_tag: str | None,
+        confidence: float | None,
+        notes: str | None,
+    ) -> None:
+        self.db.add(
+            MappingException(
+                company_id=company_id,
+                filing_id=filing_id,
+                attempted_field=attempted_field,
+                xbrl_tag=xbrl_tag,
+                confidence=confidence,
+                notes=notes,
             )
         )
 
@@ -71,6 +122,7 @@ class FinancialsValidationService:
         fiscal_period: str,
         required_values: dict[str, Decimal | None],
         company_id: int | None = None,
+        filing_id: int | None = None,
     ) -> None:
         missing_fields = [field for field, value in required_values.items() if value is None]
         if missing_fields:
@@ -79,6 +131,7 @@ class FinancialsValidationService:
                 category="missing_values",
                 message=f"Missing values in {statement_type} for {fiscal_year}-{fiscal_period}: {', '.join(missing_fields)}",
                 company_id=company_id,
+                filing_id=filing_id,
             )
 
     def _serialize_context(self, context: dict[str, object] | str | None) -> str | None:
@@ -109,6 +162,7 @@ class FinancialsValidationService:
         total_liabilities: Decimal,
         shareholder_equity: Decimal,
         company_id: int | None = None,
+        filing_id: int | None = None,
     ) -> None:
         lhs = total_assets.quantize(Decimal("0.01"))
         rhs = (total_liabilities + shareholder_equity).quantize(Decimal("0.01"))
@@ -121,5 +175,6 @@ class FinancialsValidationService:
                     f"Assets={lhs}, Liabilities+Equity={rhs}"
                 ),
                 company_id=company_id,
+                filing_id=filing_id,
             )
 

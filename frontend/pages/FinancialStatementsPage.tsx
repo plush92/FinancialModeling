@@ -3,13 +3,17 @@ import { useState } from "react";
 
 import { BalanceSheetTable } from "../components/BalanceSheetTable";
 import { CashFlowTable } from "../components/CashFlowTable";
+import { DataQualityCard } from "../components/DataQualityCard";
 import { IncomeStatementTable } from "../components/IncomeStatementTable";
 import { TickerSearch } from "../components/TickerSearch";
-import { getFinancials, syncTicker } from "../services/api";
-import type { FinancialsResponse } from "../types/financials";
+import { ValidationIssuesTable } from "../components/ValidationIssuesTable";
+import { getFinancials, getIssues, getQuality, syncTicker } from "../services/api";
+import type { FinancialsResponse, IssuesResponse, QualityResponse } from "../types/financials";
 
 export function FinancialStatementsPage() {
   const [data, setData] = useState<FinancialsResponse | null>(null);
+  const [quality, setQuality] = useState<QualityResponse | null>(null);
+  const [issues, setIssues] = useState<IssuesResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +22,18 @@ export function FinancialStatementsPage() {
     setError(null);
     try {
       await syncTicker(ticker);
-      const response = await getFinancials(ticker);
-      setData(response);
+      const [financialsResponse, qualityResponse, issuesResponse] = await Promise.all([
+        getFinancials(ticker),
+        getQuality(ticker),
+        getIssues(ticker),
+      ]);
+      setData(financialsResponse);
+      setQuality(qualityResponse);
+      setIssues(issuesResponse);
     } catch (err) {
       setData(null);
+      setQuality(null);
+      setIssues(null);
       setError(err instanceof Error ? err.message : "Unexpected error");
     } finally {
       setLoading(false);
@@ -55,6 +67,8 @@ export function FinancialStatementsPage() {
           <Alert severity="info">
             {data.company.company_name} ({data.company.ticker}) - CIK: {data.company.cik ?? "N/A"}
           </Alert>
+          {quality && <DataQualityCard quality={quality} />}
+          {issues && <ValidationIssuesTable issues={issues} />}
           <IncomeStatementTable rows={data.income_statements} />
           <BalanceSheetTable rows={data.balance_sheets} />
           <CashFlowTable rows={data.cash_flow_statements} />
