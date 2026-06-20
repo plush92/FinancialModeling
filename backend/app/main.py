@@ -6,6 +6,7 @@ from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
+from app.routers.historical_financials import router as historical_router
 
 settings = get_settings()
 
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title=settings.project_name, version=settings.version, lifespan=lifespan)
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(historical_router)
 
 
 @app.get("/health")

@@ -6,7 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class CompanyBase(BaseModel):
     cik: int | None = Field(default=None, gt=0)
     ticker: str = Field(min_length=1, max_length=16)
-    name: str = Field(min_length=1, max_length=255)
+    company_name: str | None = Field(default=None, min_length=1, max_length=255)
+    name: str | None = Field(default=None, min_length=1, max_length=255)
     sector: str | None = Field(default=None, max_length=120)
     industry: str | None = Field(default=None, max_length=120)
     country: str | None = Field(default=None, max_length=120)
@@ -21,6 +22,7 @@ class CompanyCreate(CompanyBase):
 class CompanyUpdate(BaseModel):
     cik: int | None = Field(default=None, gt=0)
     ticker: str | None = Field(default=None, min_length=1, max_length=16)
+    company_name: str | None = Field(default=None, min_length=1, max_length=255)
     name: str | None = Field(default=None, min_length=1, max_length=255)
     sector: str | None = Field(default=None, max_length=120)
     industry: str | None = Field(default=None, max_length=120)

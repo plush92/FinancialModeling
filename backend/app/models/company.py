@@ -18,6 +18,7 @@ class Company(Base, TimestampMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     cik: Mapped[int | None] = mapped_column(Integer, unique=True, index=True, nullable=True)
     ticker: Mapped[str] = mapped_column(String(16), unique=True, nullable=False, index=True)
+    company_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     sector: Mapped[str | None] = mapped_column(String(120), nullable=True)
     industry: Mapped[str | None] = mapped_column(String(120), nullable=True)
@@ -29,3 +30,4 @@ class Company(Base, TimestampMixin):
     balance_sheets: Mapped[list["BalanceSheet"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     cash_flow_statements: Mapped[list["CashFlowStatement"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     financial_ratios: Mapped[list["FinancialRatio"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+
