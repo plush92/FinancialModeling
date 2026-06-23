@@ -9,9 +9,13 @@ if TYPE_CHECKING:
     from app.models.balance_sheet import BalanceSheet
     from app.models.cash_flow_statement import CashFlowStatement
     from app.models.filing import Filing
+    from app.models.guidance_record import GuidanceRecord
+    from app.models.news_event import NewsEvent
     from app.models.financial_metric import FinancialMetric
     from app.models.financial_ratio import FinancialRatio
     from app.models.income_statement import IncomeStatement
+    from app.models.research_document import ResearchDocument
+    from app.models.research_risk import ResearchRisk
 
 
 class Company(Base, TimestampMixin):
@@ -34,4 +38,8 @@ class Company(Base, TimestampMixin):
     financial_ratios: Mapped[list["FinancialRatio"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     financial_metrics: Mapped[list["FinancialMetric"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     filings: Mapped[list["Filing"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    research_documents: Mapped[list["ResearchDocument"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    research_risks: Mapped[list["ResearchRisk"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    guidance_records: Mapped[list["GuidanceRecord"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    news_events: Mapped[list["NewsEvent"]] = relationship(back_populates="company", cascade="all, delete-orphan")
 

@@ -1,9 +1,14 @@
 import type {
+  GuidanceResponse,
   FinancialsResponse,
   IssuesResponse,
   MetricsResponse,
+  NewsResponse,
   QualityResponse,
   RatiosResponse,
+  ResearchResponse,
+  RisksResponse,
+  TimelineResponse,
   TrendsResponse,
 } from "../types/financials";
 
@@ -44,5 +49,25 @@ export async function getMetrics(ticker: string): Promise<MetricsResponse> {
 
 export async function getTrends(ticker: string): Promise<TrendsResponse> {
   return request<TrendsResponse>(`/trends/${ticker}`);
+}
+
+export async function getResearch(ticker: string): Promise<ResearchResponse> {
+  return request<ResearchResponse>(`/research/${ticker}`);
+}
+
+export async function getRisks(ticker: string): Promise<RisksResponse> {
+  return request<RisksResponse>(`/risks/${ticker}`);
+}
+
+export async function getGuidance(ticker: string): Promise<GuidanceResponse> {
+  return request<GuidanceResponse>(`/guidance/${ticker}`);
+}
+
+export async function getNews(ticker: string): Promise<NewsResponse> {
+  return request<NewsResponse>(`/news/${ticker}`);
+}
+
+export async function getTimeline(ticker: string): Promise<TimelineResponse> {
+  return request<TimelineResponse>(`/timeline/${ticker}`);
 }
 
