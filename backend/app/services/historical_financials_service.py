@@ -158,13 +158,17 @@ class HistoricalFinancialsService:
             }
         except (SECClientError, SQLAlchemyError, ValueError) as exc:
             self.db.rollback()
-            self.validator.log_error(
-                ticker=normalized_ticker,
-                category="sync_failure",
-                message=str(exc),
-                context={"max_periods": max_periods},
-            )
-            self.db.commit()
+            try:
+                self.validator.log_error(
+                    ticker=normalized_ticker,
+                    category="sync_failure",
+                    message=str(exc),
+                    context={"max_periods": max_periods},
+                )
+                self.db.commit()
+            except SQLAlchemyError:
+                # If the DB connection itself is unavailable, logging cannot be persisted.
+                self.db.rollback()
             raise
 
     def _extract_periods(self, submissions: dict[str, Any], max_periods: int) -> list[dict[str, Any]]:

@@ -1,0 +1,26 @@
+Use this exact run flow:
+
+Backend terminal:
+
+cd /Users/brendanduffy/Documents/FinancialModeling/backend
+source ../.venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+Frontend terminal:
+
+cd /Users/brendanduffy/Documents/FinancialModeling/frontend
+npm install
+npm run dev
+Then open:
+
+Backend docs: http://127.0.0.1:8000/docs
+Frontend app: usually http://localhost:5173
+For tests, use the venv python:
+
+cd /Users/brendanduffy/Documents/FinancialModeling
+source .venv/bin/activate
+python -m pytest test_reconciliation_engine.py test_validation_service.py -q
+Important:
+
+Do not start backend from repo root with backend.app.main:app
+Start from backend directory with app.main:app
+Keep both backend and frontend terminals running at the same time
