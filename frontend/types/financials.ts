@@ -75,3 +75,86 @@ export type IssuesResponse = {
   validation_issues: ValidationIssue[];
   mapping_exceptions: MappingException[];
 };
+
+export type MetricPoint = {
+  fiscal_year: number;
+  fiscal_period: string;
+  value: number | null;
+};
+
+export type RatioMetricSeries = {
+  metric_name: string;
+  display_name: string;
+  category: string;
+  unit: "percent" | "multiple" | "days" | "currency" | string;
+  formula: string;
+  source_metrics: string[];
+  latest_inputs_used: Record<string, number | string | null>;
+  history: MetricPoint[];
+  latest_value: number | null;
+  trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
+};
+
+export type KPISummary = {
+  metric_name: string;
+  display_name: string;
+  category: string;
+  unit: "percent" | "multiple" | "days" | "currency" | string;
+  value: number | null;
+  trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
+};
+
+export type RatiosResponse = {
+  ticker: string;
+  company_id: number;
+  calculation_version: string;
+  generated_at: string;
+  historical_periods: Array<{
+    fiscal_year: number;
+    fiscal_period: string;
+    metrics: Record<string, number | null>;
+  }>;
+  sections: Record<string, RatioMetricSeries[]>;
+  kpi_summary: KPISummary[];
+};
+
+export type FinancialMetric = {
+  id: number;
+  company_id: number;
+  fiscal_year: number;
+  fiscal_period: string;
+  period_type: "annual" | "quarterly";
+  metric_name: string;
+  metric_value: number | null;
+  formula: string;
+  inputs_used: Record<string, number | string | null>;
+  source_metrics: string[];
+  calculation_version: string;
+  created_at: string;
+};
+
+export type MetricsResponse = {
+  ticker: string;
+  company_id: number;
+  calculation_version: string;
+  metrics: FinancialMetric[];
+};
+
+export type MetricTrend = {
+  metric_name: string;
+  display_name: string;
+  category: string;
+  latest_value: number | null;
+  previous_value: number | null;
+  cagr_3y: number | null;
+  cagr_5y: number | null;
+  rolling_average_3_periods: number | null;
+  trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
+};
+
+export type TrendsResponse = {
+  ticker: string;
+  company_id: number;
+  calculation_version: string;
+  trends: MetricTrend[];
+};

@@ -1,4 +1,11 @@
-import type { FinancialsResponse, IssuesResponse, QualityResponse } from "../types/financials";
+import type {
+  FinancialsResponse,
+  IssuesResponse,
+  MetricsResponse,
+  QualityResponse,
+  RatiosResponse,
+  TrendsResponse,
+} from "../types/financials";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -25,5 +32,17 @@ export async function getQuality(ticker: string): Promise<QualityResponse> {
 
 export async function getIssues(ticker: string): Promise<IssuesResponse> {
   return request<IssuesResponse>(`/issues/${ticker}`);
+}
+
+export async function getRatios(ticker: string): Promise<RatiosResponse> {
+  return request<RatiosResponse>(`/ratios/${ticker}`);
+}
+
+export async function getMetrics(ticker: string): Promise<MetricsResponse> {
+  return request<MetricsResponse>(`/metrics/${ticker}`);
+}
+
+export async function getTrends(ticker: string): Promise<TrendsResponse> {
+  return request<TrendsResponse>(`/trends/${ticker}`);
 }
 
