@@ -1,4 +1,5 @@
-import { Box, Grid2 as Grid, Stack, Typography } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Grid2 as Grid, Stack, Typography } from "@mui/material";
 
 import type { RatiosResponse } from "../types/financials";
 import { MetricCard } from "./MetricCard";
@@ -16,6 +17,20 @@ const SECTION_LABELS: Record<string, string> = {
   cash_flow: "Cash Flow",
 };
 
+function dedupeMetrics<T extends { metric_name: string; display_name: string }>(metrics: T[]): T[] {
+  const seen = new Set<string>();
+  const deduped: T[] = [];
+  for (const metric of metrics) {
+    const key = `${metric.metric_name}|${metric.display_name.toLowerCase()}`;
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(metric);
+  }
+  return deduped;
+}
+
 export function RatioDashboard({ ratios }: Props) {
   const sectionOrder = ["profitability", "liquidity", "leverage", "growth", "efficiency", "cash_flow"];
 
@@ -23,25 +38,33 @@ export function RatioDashboard({ ratios }: Props) {
     <Stack spacing={3}>
       <Box>
         <Typography variant="h5">Ratio Dashboard</Typography>
-        <Typography color="text.secondary">Version {ratios.calculation_version} | Generated {new Date(ratios.generated_at).toLocaleString()}</Typography>
       </Box>
 
       {sectionOrder.map((sectionKey) => {
-        const metrics = ratios.sections[sectionKey] ?? [];
+        const metrics = dedupeMetrics(ratios.sections[sectionKey] ?? []);
         if (metrics.length === 0) {
           return null;
         }
         return (
-          <Stack key={sectionKey} spacing={1}>
-            <Typography variant="h6">{SECTION_LABELS[sectionKey] ?? sectionKey}</Typography>
-            <Grid container spacing={1.5}>
-              {metrics.map((metric) => (
-                <Grid key={metric.metric_name} size={{ xs: 12, md: 6, lg: 4 }}>
-                  <MetricCard metric={metric} />
-                </Grid>
-              ))}
-            </Grid>
-          </Stack>
+          <Accordion key={sectionKey} disableGutters defaultExpanded>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="h6">{SECTION_LABELS[sectionKey] ?? sectionKey}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {metrics.length} metrics
+                </Typography>
+              </Stack>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Grid container spacing={1.5}>
+                {metrics.map((metric) => (
+                  <Grid key={metric.metric_name} size={{ xs: 12, md: 6, lg: 4 }}>
+                    <MetricCard metric={metric} />
+                  </Grid>
+                ))}
+              </Grid>
+            </AccordionDetails>
+          </Accordion>
         );
       })}
     </Stack>

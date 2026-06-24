@@ -19,7 +19,12 @@ export function RiskPanel({ risks }: Props) {
       <CardHeader title="Key Risks" subheader="Categorized risk factors from filings and commentary" />
       <CardContent>
         <Stack spacing={1.2}>
-          {risks.length === 0 && <Alert severity="info">No extracted risks yet.</Alert>}
+          {risks.length === 0 && (
+            <Alert severity="info">
+              No risks extracted yet. We did not detect explicit risk factors in the latest parsed filings or commentary. This can
+              happen when disclosures are limited, extraction confidence is low, or source documents are still being processed.
+            </Alert>
+          )}
           {risks.slice(0, 12).map((risk) => (
             <Stack key={risk.id} spacing={0.5} sx={{ borderBottom: "1px solid #e6e8ec", pb: 1 }}>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">

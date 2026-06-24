@@ -318,51 +318,71 @@ class ResearchIntelligenceService:
         if company is None:
             return None
 
+        documents = self._documents(company.id)
+        document_lookup: dict[str, dict[str, Any]] = {
+            row.title: {
+                "document_type": row.document_type,
+                "source_document_url": row.source_document_url,
+            }
+            for row in documents
+        }
+
         timeline: list[dict[str, Any]] = []
-        for row in self._documents(company.id):
+        for row in documents:
             timeline.append(
                 {
                     "date": row.publication_date,
                     "item_type": "Document",
                     "title": row.title,
                     "summary": row.summary,
+                    "filing_type": row.document_type,
                     "confidence_score": float(row.confidence_score),
                     "source_document": row.title,
+                    "source_document_url": row.source_document_url,
                 }
             )
         for row in self._risks(company.id):
+            doc = document_lookup.get(row.source_document, {})
             timeline.append(
                 {
                     "date": row.publication_date,
                     "item_type": "Risk",
                     "title": f"{row.risk_category} risk",
                     "summary": row.description,
+                    "filing_type": doc.get("document_type"),
                     "confidence_score": float(row.confidence),
                     "source_document": row.source_document,
+                    "source_document_url": doc.get("source_document_url"),
                 }
             )
         for row in self._guidance(company.id):
+            doc = document_lookup.get(row.source_document, {})
             timeline.append(
                 {
                     "date": row.publication_date,
                     "item_type": "Guidance",
                     "title": row.guidance_type,
                     "summary": row.guidance_value,
+                    "filing_type": doc.get("document_type"),
                     "confidence_score": float(row.confidence),
                     "source_document": row.source_document,
+                    "source_document_url": doc.get("source_document_url"),
                 }
             )
         for row in self._news(company.id):
+            doc = document_lookup.get(row.source_document, {})
             timeline.append(
                 {
                     "date": row.publication_date,
                     "item_type": "News",
                     "title": row.headline,
                     "summary": row.event_summary,
+                    "filing_type": doc.get("document_type"),
                     "sentiment": row.sentiment,
                     "importance_score": row.importance_score,
                     "confidence_score": float(row.confidence_score),
                     "source_document": row.source_document,
+                    "source_document_url": doc.get("source_document_url"),
                 }
             )
 

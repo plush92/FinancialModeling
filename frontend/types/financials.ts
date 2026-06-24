@@ -225,10 +225,12 @@ export type TimelineItem = {
   item_type: string;
   title: string;
   summary: string;
+  filing_type?: string | null;
   sentiment?: string | null;
   importance_score?: number | null;
   confidence_score?: number | null;
   source_document?: string | null;
+  source_document_url?: string | null;
 };
 
 export type ResearchSummaryCardData = {

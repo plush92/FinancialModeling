@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader } from "@mui/material";
+import { Alert, Card, CardContent, CardHeader } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 
 import type { GuidanceRecord } from "../types/financials";
@@ -27,7 +27,14 @@ export function GuidanceTracker({ guidance }: Props) {
     <Card>
       <CardHeader title="Guidance Tracker" subheader="Management guidance history and confidence" />
       <CardContent>
-        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20, 100]} />
+        {rows.length === 0 ? (
+          <Alert severity="info">
+            No guidance extracted yet. We did not find explicit forward-looking guidance language in the latest processed documents.
+            Try refreshing data after new filings, earnings calls, or press releases are available.
+          </Alert>
+        ) : (
+          <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20, 100]} />
+        )}
       </CardContent>
     </Card>
   );

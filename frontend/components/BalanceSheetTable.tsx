@@ -1,5 +1,16 @@
-import { Card, CardContent, CardHeader } from "@mui/material";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  FormControlLabel,
+  Stack,
+  Switch,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { useMemo, useState } from "react";
 
 import type { BalanceSheet } from "../types/financials";
 
@@ -7,26 +18,282 @@ type Props = {
   rows: BalanceSheet[];
 };
 
+type PeriodMode = "quarterly" | "annual" | "ttm";
+
+type BalanceRowView = BalanceSheet & {
+  period_label: string;
+  deltas: Record<string, number | null>;
+};
+
+const QUARTER_ORDER: Record<string, number> = {
+  Q1: 1,
+  Q2: 2,
+  Q3: 3,
+  Q4: 4,
+  FY: 5,
+};
+
+const METRIC_FIELDS: Array<keyof BalanceSheet> = ["cash", "total_assets", "total_liabilities", "shareholder_equity", "total_debt"];
+
 function asMillions(value: number): string {
   return `${(value / 1_000_000).toFixed(1)}M`;
 }
 
+function asNumber(value: unknown): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function sortByPeriodDesc(a: BalanceSheet, b: BalanceSheet): number {
+  if (a.fiscal_year !== b.fiscal_year) {
+    return b.fiscal_year - a.fiscal_year;
+  }
+  return (QUARTER_ORDER[b.fiscal_period] ?? 0) - (QUARTER_ORDER[a.fiscal_period] ?? 0);
+}
+
+function trendArrow(rows: BalanceRowView[], field: keyof BalanceSheet): string {
+  if (rows.length < 2) {
+    return "->";
+  }
+  const current = asNumber(rows[0][field]);
+  const previous = asNumber(rows[1][field]);
+  if (current === null || previous === null) {
+    return "->";
+  }
+  if (current > previous) {
+    return "↑";
+  }
+  if (current < previous) {
+    return "↓";
+  }
+  return "->";
+}
+
+function buildTTMRows(rows: BalanceSheet[]): BalanceSheet[] {
+  const quarterlyAsc = [...rows]
+    .filter((row) => row.fiscal_period.startsWith("Q"))
+    .sort((a, b) => {
+      if (a.fiscal_year !== b.fiscal_year) {
+        return a.fiscal_year - b.fiscal_year;
+      }
+      return (QUARTER_ORDER[a.fiscal_period] ?? 0) - (QUARTER_ORDER[b.fiscal_period] ?? 0);
+    });
+
+  if (quarterlyAsc.length < 4) {
+    return [];
+  }
+
+  const ttmRows: BalanceSheet[] = [];
+  for (let i = 3; i < quarterlyAsc.length; i += 1) {
+    const windowRows = quarterlyAsc.slice(i - 3, i + 1);
+    const end = quarterlyAsc[i];
+    ttmRows.push({
+      id: Number(`${end.fiscal_year}${i}8`),
+      company_id: end.company_id,
+      fiscal_year: end.fiscal_year,
+      fiscal_period: end.fiscal_period,
+      cash: windowRows.reduce((sum, row) => sum + Number(row.cash), 0) / 4,
+      total_assets: windowRows.reduce((sum, row) => sum + Number(row.total_assets), 0) / 4,
+      total_liabilities: windowRows.reduce((sum, row) => sum + Number(row.total_liabilities), 0) / 4,
+      shareholder_equity: windowRows.reduce((sum, row) => sum + Number(row.shareholder_equity), 0) / 4,
+      total_debt: windowRows.reduce((sum, row) => sum + Number(row.total_debt), 0) / 4,
+    });
+  }
+  return ttmRows;
+}
+
+function withDeltas(rows: BalanceRowView[]): BalanceRowView[] {
+  return rows.map((row, index) => {
+    const previous = rows[index + 1];
+    const deltas: Record<string, number | null> = {};
+    for (const field of METRIC_FIELDS) {
+      const current = asNumber(row[field]);
+      const prior = previous ? asNumber(previous[field]) : null;
+      if (current === null || prior === null || prior === 0) {
+        deltas[field] = null;
+      } else {
+        deltas[field] = ((current - prior) / Math.abs(prior)) * 100;
+      }
+    }
+    return {
+      ...row,
+      deltas,
+    };
+  });
+}
+
+function formatDelta(delta: number | null): string {
+  if (delta === null) {
+    return "n/a";
+  }
+  const sign = delta > 0 ? "+" : "";
+  return `${sign}${delta.toFixed(1)}%`;
+}
+
+function deltaColor(delta: number | null): string {
+  if (delta === null || delta === 0) {
+    return "text.secondary";
+  }
+  return delta > 0 ? "success.main" : "error.main";
+}
+
 export function BalanceSheetTable({ rows }: Props) {
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quarterly");
+  const [compareMode, setCompareMode] = useState(false);
+
+  const viewRows = useMemo(() => {
+    let filtered: BalanceSheet[];
+    if (periodMode === "annual") {
+      filtered = rows.filter((row) => row.fiscal_period === "FY");
+    } else if (periodMode === "ttm") {
+      filtered = buildTTMRows(rows);
+    } else {
+      filtered = rows.filter((row) => row.fiscal_period.startsWith("Q"));
+    }
+
+    const sorted = [...filtered].sort(sortByPeriodDesc);
+    const labeled: BalanceRowView[] = sorted.map((row) => ({
+      ...row,
+      period_label:
+        periodMode === "ttm"
+          ? `TTM avg ending ${row.fiscal_year} ${row.fiscal_period}`
+          : `${row.fiscal_year} ${row.fiscal_period}`,
+      deltas: {},
+    }));
+    return withDeltas(labeled);
+  }, [periodMode, rows]);
+
   const columns: GridColDef[] = [
-    { field: "fiscal_year", headerName: "Fiscal Year", minWidth: 110 },
-    { field: "fiscal_period", headerName: "Period", minWidth: 90 },
-    { field: "cash", headerName: "Cash", minWidth: 120, valueFormatter: (value) => asMillions(Number(value)) },
-    { field: "total_assets", headerName: "Total Assets", minWidth: 130, valueFormatter: (value) => asMillions(Number(value)) },
-    { field: "total_liabilities", headerName: "Total Liabilities", minWidth: 150, valueFormatter: (value) => asMillions(Number(value)) },
-    { field: "shareholder_equity", headerName: "Shareholder Equity", minWidth: 155, valueFormatter: (value) => asMillions(Number(value)) },
-    { field: "total_debt", headerName: "Total Debt", minWidth: 120, valueFormatter: (value) => asMillions(Number(value)) },
+    {
+      field: "period_label",
+      headerName: "Period",
+      minWidth: 180,
+      flex: 0.9,
+      headerClassName: "period-header",
+      cellClassName: "period-cell",
+      sortable: false,
+    },
+    {
+      field: "cash",
+      headerName: `Cash ${trendArrow(viewRows, "cash")}`,
+      minWidth: 140,
+      renderCell: (params) => {
+        const delta = params.row.deltas.cash;
+        return compareMode ? (
+          <Stack spacing={0.25}>
+            <Typography variant="body2">{asMillions(Number(params.value))}</Typography>
+            <Typography variant="caption" color={deltaColor(delta)}>{formatDelta(delta)}</Typography>
+          </Stack>
+        ) : asMillions(Number(params.value));
+      },
+    },
+    {
+      field: "total_assets",
+      headerName: `Total Assets ${trendArrow(viewRows, "total_assets")}`,
+      minWidth: 150,
+      renderCell: (params) => {
+        const delta = params.row.deltas.total_assets;
+        return compareMode ? (
+          <Stack spacing={0.25}>
+            <Typography variant="body2">{asMillions(Number(params.value))}</Typography>
+            <Typography variant="caption" color={deltaColor(delta)}>{formatDelta(delta)}</Typography>
+          </Stack>
+        ) : asMillions(Number(params.value));
+      },
+    },
+    {
+      field: "total_liabilities",
+      headerName: `Total Liabilities ${trendArrow(viewRows, "total_liabilities")}`,
+      minWidth: 170,
+      renderCell: (params) => {
+        const delta = params.row.deltas.total_liabilities;
+        return compareMode ? (
+          <Stack spacing={0.25}>
+            <Typography variant="body2">{asMillions(Number(params.value))}</Typography>
+            <Typography variant="caption" color={deltaColor(delta)}>{formatDelta(delta)}</Typography>
+          </Stack>
+        ) : asMillions(Number(params.value));
+      },
+    },
+    {
+      field: "shareholder_equity",
+      headerName: `Shareholder Equity ${trendArrow(viewRows, "shareholder_equity")}`,
+      minWidth: 180,
+      renderCell: (params) => {
+        const delta = params.row.deltas.shareholder_equity;
+        return compareMode ? (
+          <Stack spacing={0.25}>
+            <Typography variant="body2">{asMillions(Number(params.value))}</Typography>
+            <Typography variant="caption" color={deltaColor(delta)}>{formatDelta(delta)}</Typography>
+          </Stack>
+        ) : asMillions(Number(params.value));
+      },
+    },
+    {
+      field: "total_debt",
+      headerName: `Total Debt ${trendArrow(viewRows, "total_debt")}`,
+      minWidth: 140,
+      renderCell: (params) => {
+        const delta = params.row.deltas.total_debt;
+        return compareMode ? (
+          <Stack spacing={0.25}>
+            <Typography variant="body2">{asMillions(Number(params.value))}</Typography>
+            <Typography variant="caption" color={deltaColor(delta)}>{formatDelta(delta)}</Typography>
+          </Stack>
+        ) : asMillions(Number(params.value));
+      },
+    },
   ];
 
   return (
     <Card>
       <CardHeader title="Balance Sheet" />
       <CardContent>
-        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20, 100]} />
+        <Stack spacing={1.5}>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} justifyContent="space-between">
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={periodMode}
+              onChange={(_, value: PeriodMode | null) => value && setPeriodMode(value)}
+            >
+              <ToggleButton value="quarterly">Quarterly</ToggleButton>
+              <ToggleButton value="annual">Annual</ToggleButton>
+              <ToggleButton value="ttm">TTM</ToggleButton>
+            </ToggleButtonGroup>
+            <FormControlLabel
+              control={<Switch checked={compareMode} onChange={(event) => setCompareMode(event.target.checked)} />}
+              label="Compare to previous period"
+            />
+          </Stack>
+
+          <DataGrid
+            autoHeight
+            rows={viewRows}
+            columns={columns}
+            disableRowSelectionOnClick
+            pageSizeOptions={[5, 10, 20, 100]}
+            sx={{
+              "& .period-header": {
+                position: "sticky",
+                left: 0,
+                zIndex: 4,
+                backgroundColor: "background.paper",
+              },
+              "& .period-cell": {
+                position: "sticky",
+                left: 0,
+                zIndex: 3,
+                backgroundColor: "background.paper",
+                borderRight: "1px solid",
+                borderColor: "divider",
+              },
+            }}
+          />
+        </Stack>
       </CardContent>
     </Card>
   );

@@ -78,10 +78,12 @@ class TimelineItem(BaseModel):
     item_type: str
     title: str
     summary: str
+    filing_type: str | None = None
     sentiment: str | None = None
     importance_score: int | None = None
     confidence_score: float | None = None
     source_document: str | None = None
+    source_document_url: str | None = None
 
 
 class ResearchSummaryCardData(BaseModel):
