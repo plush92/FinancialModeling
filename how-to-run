@@ -16,11 +16,29 @@ Backend docs: http://127.0.0.1:8000/docs
 Frontend app: usually http://localhost:5173
 For tests, use the venv python:
 
-cd /Users/brendanduffy/Documents/FinancialModeling
-source .venv/bin/activate
-python -m pytest test_reconciliation_engine.py test_validation_service.py -q
+cd /Users/brendanduffy/Documents/FinancialModeling/backend
+source ../.venv/bin/activate
+python -m pytest tests/test_reconciliation_engine.py tests/test_validation_service.py -q
 Important:
 
 Do not start backend from repo root with backend.app.main:app
 Start from backend directory with app.main:app
 Keep both backend and frontend terminals running at the same time
+
+If you see "[Errno 48] Address already in use":
+
+That means a backend instance is already running on port 8000.
+If this command returns 200, backend is already healthy and you do not need to start it again:
+curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/docs
+
+Only restart backend if needed.
+Find it:
+lsof -nP -iTCP:8000 -sTCP:LISTEN
+
+Stop it (safe if no PID is found):
+lsof -ti tcp:8000 | xargs kill -9
+
+Then start backend again from backend directory:
+cd /Users/brendanduffy/Documents/FinancialModeling/backend
+source ../.venv/bin/activate
+uvicorn app.main:app --reload --port 8000

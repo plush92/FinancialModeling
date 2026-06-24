@@ -26,7 +26,7 @@ export function IncomeStatementTable({ rows }: Props) {
     <Card>
       <CardHeader title="Income Statement" />
       <CardContent>
-        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20]} />
+        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20, 100]} />
       </CardContent>
     </Card>
   );

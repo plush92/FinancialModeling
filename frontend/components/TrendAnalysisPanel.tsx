@@ -51,7 +51,7 @@ export function TrendAnalysisPanel({ trends }: Props) {
     <Card>
       <CardHeader title="Trend Analysis" subheader="3Y/5Y CAGR, rolling averages, and trend direction" />
       <CardContent>
-        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20]} />
+        <DataGrid autoHeight rows={rows} columns={columns} disableRowSelectionOnClick pageSizeOptions={[5, 10, 20, 100]} />
       </CardContent>
     </Card>
   );

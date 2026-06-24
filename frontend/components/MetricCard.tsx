@@ -10,20 +10,32 @@ type Props = {
   metric: RatioMetricSeries;
 };
 
-function formatMetric(value: number | null, unit: string): string {
+function toFiniteNumber(value: number | string | null): number | null {
   if (value === null) {
+    return null;
+  }
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
+function formatMetric(value: number | string | null, unit: string): string {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) {
     return "N/A";
   }
   if (unit === "percent") {
-    return `${(value * 100).toFixed(1)}%`;
+    return `${(numericValue * 100).toFixed(1)}%`;
   }
   if (unit === "currency") {
-    return `$${(value / 1_000_000).toFixed(1)}M`;
+    return `$${(numericValue / 1_000_000).toFixed(1)}M`;
   }
   if (unit === "days") {
-    return `${value.toFixed(1)} days`;
+    return `${numericValue.toFixed(1)} days`;
   }
-  return value.toFixed(2);
+  return numericValue.toFixed(2);
 }
 
 function trendVisual(direction: RatioMetricSeries["trend_direction"]) {

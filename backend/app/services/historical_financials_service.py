@@ -72,7 +72,7 @@ class HistoricalFinancialsService:
             facts = self.sec_client.get_company_facts(cik)
 
             company = self._upsert_company(normalized_ticker, cik, submissions)
-            periods = self._extract_periods(submissions, max_periods=max_periods)
+            periods = self._extract_periods(submissions, max_periods=max_periods, company_facts=facts)
 
             synced_income = 0
             synced_balance = 0
@@ -171,40 +171,95 @@ class HistoricalFinancialsService:
                 self.db.rollback()
             raise
 
-    def _extract_periods(self, submissions: dict[str, Any], max_periods: int) -> list[dict[str, Any]]:
+    def _extract_periods(
+        self,
+        submissions: dict[str, Any],
+        max_periods: int,
+        company_facts: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         recent = submissions.get("filings", {}).get("recent", {})
         forms = recent.get("form", [])
         fiscal_years = recent.get("fy", [])
         fiscal_periods = recent.get("fp", [])
         accessions = recent.get("accessionNumber", [])
         filing_dates = recent.get("filingDate", [])
+        report_dates = recent.get("reportDate", [])
+
+        inferred_periods = self._build_fact_period_index(company_facts)
 
         periods: list[dict[str, Any]] = []
         seen_keys: set[tuple[int, str]] = set()
         for i, form in enumerate(forms):
             if form not in {"10-K", "10-Q"}:
                 continue
-            fy = fiscal_years[i]
-            fp = fiscal_periods[i]
+
+            if i >= len(accessions):
+                continue
+
+            accession = accessions[i]
+            fy = fiscal_years[i] if i < len(fiscal_years) else None
+            fp = fiscal_periods[i] if i < len(fiscal_periods) else None
+
+            if (fy is None or fp is None) and accession:
+                inferred = inferred_periods.get((str(accession), str(form)))
+                if inferred is not None:
+                    fy, fp = inferred
+
             if fy is None or fp is None:
                 continue
+
             fiscal_period = self._normalize_fiscal_period(str(fp), form)
             period_key = (int(fy), fiscal_period)
             if period_key in seen_keys:
                 continue
             seen_keys.add(period_key)
+
+            filing_date = self._parse_filing_date(filing_dates[i] if i < len(filing_dates) else None)
+            if filing_date is None:
+                filing_date = self._parse_filing_date(report_dates[i] if i < len(report_dates) else None)
+
             periods.append(
                 {
                     "fiscal_year": int(fy),
                     "fiscal_period": fiscal_period,
                     "form": form,
-                    "accession_number": accessions[i],
-                    "filing_date": self._parse_filing_date(filing_dates[i] if i < len(filing_dates) else None),
+                    "accession_number": accession,
+                    "filing_date": filing_date,
                 }
             )
             if len(periods) >= max_periods:
                 break
         return periods
+
+    def _build_fact_period_index(self, company_facts: dict[str, Any] | None) -> dict[tuple[str, str], tuple[int, str]]:
+        if not company_facts:
+            return {}
+
+        facts = company_facts.get("facts", {}).get("us-gaap", {})
+        index: dict[tuple[str, str], tuple[int, str]] = {}
+        best_filed: dict[tuple[str, str], str] = {}
+
+        for tag_data in facts.values():
+            units = tag_data.get("units", {})
+            for rows in units.values():
+                if not isinstance(rows, list):
+                    continue
+                for row in rows:
+                    accn = row.get("accn")
+                    form = row.get("form")
+                    fy = row.get("fy")
+                    fp = row.get("fp")
+
+                    if not accn or form not in {"10-K", "10-Q"} or fy is None or fp is None:
+                        continue
+
+                    key = (str(accn), str(form))
+                    filed = str(row.get("filed", ""))
+                    if key not in best_filed or filed > best_filed[key]:
+                        best_filed[key] = filed
+                        index[key] = (int(fy), str(fp))
+
+        return index
 
     def _parse_filing_date(self, raw_value: Any) -> date | None:
         if raw_value is None:

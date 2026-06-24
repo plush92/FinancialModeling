@@ -79,7 +79,7 @@ export type IssuesResponse = {
 export type MetricPoint = {
   fiscal_year: number;
   fiscal_period: string;
-  value: number | null;
+  value: number | string | null;
 };
 
 export type RatioMetricSeries = {
@@ -91,7 +91,7 @@ export type RatioMetricSeries = {
   source_metrics: string[];
   latest_inputs_used: Record<string, number | string | null>;
   history: MetricPoint[];
-  latest_value: number | null;
+  latest_value: number | string | null;
   trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
 };
 
@@ -100,7 +100,7 @@ export type KPISummary = {
   display_name: string;
   category: string;
   unit: "percent" | "multiple" | "days" | "currency" | string;
-  value: number | null;
+  value: number | string | null;
   trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
 };
 
@@ -144,11 +144,11 @@ export type MetricTrend = {
   metric_name: string;
   display_name: string;
   category: string;
-  latest_value: number | null;
-  previous_value: number | null;
-  cagr_3y: number | null;
-  cagr_5y: number | null;
-  rolling_average_3_periods: number | null;
+  latest_value: number | string | null;
+  previous_value: number | string | null;
+  cagr_3y: number | string | null;
+  cagr_5y: number | string | null;
+  rolling_average_3_periods: number | string | null;
   trend_direction: "Improving" | "Stable" | "Deteriorating" | null;
 };
 

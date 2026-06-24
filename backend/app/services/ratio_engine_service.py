@@ -7,6 +7,7 @@ from decimal import Decimal
 from math import isfinite
 from typing import Any
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.balance_sheet import BalanceSheet
@@ -230,7 +231,12 @@ class RatioEngineService:
 
         calculated_rows = self._calculate_metrics(company.id)
         self.db.add_all(calculated_rows)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError:
+            # Concurrent requests can recompute metrics at the same time.
+            # If another request committed first, reuse the persisted rows.
+            self.db.rollback()
 
         return self._load_metric_rows(company.id)
 

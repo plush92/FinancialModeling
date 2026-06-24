@@ -7,8 +7,21 @@ type Props = {
   unit: string;
 };
 
+function toFiniteNumber(value: number | string | null): number | null {
+  if (value === null) {
+    return null;
+  }
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  return parsed;
+}
+
 function normalize(points: MetricPoint[]): number[] {
-  const values = points.map((point) => point.value).filter((value): value is number => value !== null);
+  const values = points
+    .map((point) => toFiniteNumber(point.value))
+    .filter((value): value is number => value !== null);
   if (values.length === 0) {
     return [];
   }
@@ -20,27 +33,29 @@ function normalize(points: MetricPoint[]): number[] {
   }
 
   return points.map((point) => {
-    if (point.value === null) {
+    const numericValue = toFiniteNumber(point.value);
+    if (numericValue === null) {
       return 50;
     }
-    return ((point.value - min) / (max - min)) * 100;
+    return ((numericValue - min) / (max - min)) * 100;
   });
 }
 
-function formatPoint(value: number | null, unit: string): string {
-  if (value === null) {
+function formatPoint(value: number | string | null, unit: string): string {
+  const numericValue = toFiniteNumber(value);
+  if (numericValue === null) {
     return "N/A";
   }
   if (unit === "percent") {
-    return `${(value * 100).toFixed(1)}%`;
+    return `${(numericValue * 100).toFixed(1)}%`;
   }
   if (unit === "days") {
-    return `${value.toFixed(1)}d`;
+    return `${numericValue.toFixed(1)}d`;
   }
   if (unit === "currency") {
-    return `$${(value / 1_000_000).toFixed(1)}M`;
+    return `$${(numericValue / 1_000_000).toFixed(1)}M`;
   }
-  return value.toFixed(2);
+  return numericValue.toFixed(2);
 }
 
 export function HistoricalRatioChart({ points, unit }: Props) {
@@ -79,7 +94,9 @@ export function HistoricalRatioChart({ points, unit }: Props) {
         </svg>
       </Box>
       <Typography variant="caption" color="text.secondary">
-        {points.map((point) => `${point.fiscal_year} ${point.fiscal_period}: ${formatPoint(point.value, unit)}`).join(" | ")}
+        {points
+          .map((point) => `${point.fiscal_year} ${point.fiscal_period}: ${formatPoint(point.value, unit)}`)
+          .join(" | ")}
       </Typography>
     </Stack>
   );

@@ -37,7 +37,7 @@ export function ValidationIssuesTable({ issues }: Props) {
             rows={issues.validation_issues}
             columns={validationColumns}
             disableRowSelectionOnClick
-            pageSizeOptions={[5, 10, 20]}
+            pageSizeOptions={[5, 10, 20, 100]}
           />
         </CardContent>
       </Card>
@@ -55,7 +55,7 @@ export function ValidationIssuesTable({ issues }: Props) {
               rows={issues.mapping_exceptions}
               columns={mappingColumns}
               disableRowSelectionOnClick
-              pageSizeOptions={[5, 10, 20]}
+              pageSizeOptions={[5, 10, 20, 100]}
             />
           )}
         </CardContent>
