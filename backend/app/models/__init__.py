@@ -6,6 +6,7 @@ from app.models.filing import Filing
 from app.models.guidance_record import GuidanceRecord
 from app.models.news_event import NewsEvent
 from app.models.financial_metric import FinancialMetric
+from app.models.forecast_assumptions import ForecastAssumptionSet
 from app.models.financial_value_trace import FinancialValueTrace
 from app.models.financial_ratio import FinancialRatio
 from app.models.ingestion_exception import IngestionException

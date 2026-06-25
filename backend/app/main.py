@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import engine
 from app.routers.data_quality import router as data_quality_router
+from app.routers.forecast_engine import router as forecast_engine_router
 from app.routers.historical_financials import router as historical_router
 from app.routers.ratio_engine import router as ratio_engine_router
 from app.routers.research_intelligence import router as research_intelligence_router
@@ -40,6 +41,7 @@ app.include_router(historical_router)
 app.include_router(data_quality_router)
 app.include_router(ratio_engine_router)
 app.include_router(research_intelligence_router)
+app.include_router(forecast_engine_router)
 
 
 @app.get("/health")

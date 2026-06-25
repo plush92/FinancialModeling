@@ -8,6 +8,7 @@ from app.models.news_event import NewsEvent
 from app.models.financial_metric import FinancialMetric
 from app.models.financial_value_trace import FinancialValueTrace
 from app.models.financial_ratio import FinancialRatio
+from app.models.forecast_assumptions import ForecastAssumptionSet
 from app.models.ingestion_exception import IngestionException
 from app.models.income_statement import IncomeStatement
 from app.models.mapping_exception import MappingException

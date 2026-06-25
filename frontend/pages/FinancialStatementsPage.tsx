@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BalanceSheetTable } from "../components/BalanceSheetTable";
 import { CashFlowTable } from "../components/CashFlowTable";
 import { DataQualityCard } from "../components/DataQualityCard";
+import { ForecastDashboard } from "../components/ForecastDashboard";
 import { IncomeStatementTable } from "../components/IncomeStatementTable";
 import { KeyMetricsChartsPanel } from "../components/KeyMetricsChartsPanel";
 import { RatioDashboard } from "../components/RatioDashboard";
@@ -167,6 +168,7 @@ export function FinancialStatementsPage() {
             />
           )}
           {issues && <ValidationIssuesTable issues={issues} />}
+          {activeTicker && <ForecastDashboard ticker={activeTicker} />}
           <IncomeStatementTable rows={data.income_statements} />
           <BalanceSheetTable rows={data.balance_sheets} />
           <CashFlowTable rows={data.cash_flow_statements} />

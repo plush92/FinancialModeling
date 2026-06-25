@@ -275,3 +275,89 @@ export type TimelineResponse = {
   company_id: number;
   timeline: TimelineItem[];
 };
+
+export type ForecastScenario = "base" | "bull" | "bear";
+
+export type ExplainabilityNode = {
+  formula: string;
+  inputs: Record<string, unknown>;
+  source_historical_metric: string | null;
+  scenario_override: boolean;
+};
+
+export type ForecastIncomeStatement = {
+  revenue: number;
+  cogs: number;
+  gross_profit: number;
+  operating_expenses: number;
+  operating_income: number;
+  interest_expense: number;
+  pretax_income: number;
+  tax_expense: number;
+  net_income: number;
+  eps: number;
+};
+
+export type ForecastBalanceSheet = {
+  cash: number;
+  accounts_receivable: number;
+  inventory: number;
+  accounts_payable: number;
+  total_assets: number;
+  total_liabilities: number;
+  shareholder_equity: number;
+  total_debt: number;
+};
+
+export type ForecastCashFlow = {
+  net_income: number;
+  depreciation_and_amortization: number;
+  change_in_working_capital: number;
+  operating_cash_flow: number;
+  capex: number;
+  investing_cash_flow: number;
+  debt_issued: number;
+  debt_repaid: number;
+  share_issuance: number;
+  share_buybacks: number;
+  financing_cash_flow: number;
+  free_cash_flow: number;
+  ending_cash_balance: number;
+};
+
+export type ForecastValidation = {
+  balance_sheet_balanced: boolean;
+  cash_rollforward_reconciled: boolean;
+  negative_asset_warnings: string[];
+  unreasonable_growth_flags: string[];
+  margin_sanity_flags: string[];
+  notes: string[];
+};
+
+export type ForecastPeriod = {
+  fiscal_year: number;
+  scenario: ForecastScenario;
+  income_statement: ForecastIncomeStatement;
+  balance_sheet: ForecastBalanceSheet;
+  cash_flow_statement: ForecastCashFlow;
+  explainability: Record<string, ExplainabilityNode>;
+};
+
+export type ForecastResponse = {
+  ticker: string;
+  company_id: number;
+  scenario: ForecastScenario;
+  assumptions_version: string;
+  generated_at: string;
+  assumptions: Record<string, unknown>;
+  validation: ForecastValidation;
+  projections: ForecastPeriod[];
+};
+
+export type ForecastScenariosResponse = {
+  ticker: string;
+  company_id: number;
+  assumptions_version: string;
+  generated_at: string;
+  scenarios: Record<ForecastScenario, ForecastResponse>;
+};

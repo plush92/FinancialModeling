@@ -1,5 +1,8 @@
 import type {
   GuidanceResponse,
+  ForecastResponse,
+  ForecastScenario,
+  ForecastScenariosResponse,
   FinancialsResponse,
   IssuesResponse,
   MetricsResponse,
@@ -69,5 +72,38 @@ export async function getNews(ticker: string): Promise<NewsResponse> {
 
 export async function getTimeline(ticker: string): Promise<TimelineResponse> {
   return request<TimelineResponse>(`/timeline/${ticker}`);
+}
+
+export async function createForecast(
+  ticker: string,
+  payload: {
+    scenario: ForecastScenario;
+    assumptions_version: string;
+    horizon_years?: number;
+    assumptions_override?: Record<string, unknown>;
+  },
+): Promise<ForecastResponse> {
+  return request<ForecastResponse>(`/forecast/${ticker}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getForecast(
+  ticker: string,
+  scenario: ForecastScenario = "base",
+  assumptionsVersion: string = "latest",
+): Promise<ForecastResponse> {
+  const params = new URLSearchParams({ scenario, assumptions_version: assumptionsVersion });
+  return request<ForecastResponse>(`/forecast/${ticker}?${params.toString()}`);
+}
+
+export async function getForecastScenarios(
+  ticker: string,
+  assumptionsVersion: string = "latest",
+): Promise<ForecastScenariosResponse> {
+  const params = new URLSearchParams({ assumptions_version: assumptionsVersion });
+  return request<ForecastScenariosResponse>(`/forecast/${ticker}/scenarios?${params.toString()}`);
 }
 

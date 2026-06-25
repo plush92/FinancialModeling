@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.news_event import NewsEvent
     from app.models.financial_metric import FinancialMetric
     from app.models.financial_ratio import FinancialRatio
+    from app.models.forecast_assumptions import ForecastAssumptionSet
     from app.models.income_statement import IncomeStatement
     from app.models.research_document import ResearchDocument
     from app.models.research_risk import ResearchRisk
@@ -42,4 +43,5 @@ class Company(Base, TimestampMixin):
     research_risks: Mapped[list["ResearchRisk"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     guidance_records: Mapped[list["GuidanceRecord"]] = relationship(back_populates="company", cascade="all, delete-orphan")
     news_events: Mapped[list["NewsEvent"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    forecast_assumption_sets: Mapped[list["ForecastAssumptionSet"]] = relationship(back_populates="company", cascade="all, delete-orphan")
 
