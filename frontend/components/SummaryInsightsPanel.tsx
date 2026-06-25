@@ -10,6 +10,12 @@ type Props = {
 };
 
 type CategoryTone = "improving" | "deteriorating" | "mixed" | "insufficient";
+type FlagLevel = "warning" | "error";
+
+type InsightFlag = {
+  message: string;
+  level: FlagLevel;
+};
 
 type Numeric = number | string | null;
 
@@ -258,33 +264,50 @@ function keyInsights(
   return insights.slice(0, 5);
 }
 
-function redFlags(issues: IssuesResponse | null, quality: QualityResponse | null): string[] {
-  const flags: string[] = [];
+function redFlags(issues: IssuesResponse | null, quality: QualityResponse | null): InsightFlag[] {
+  const flags = new Map<string, InsightFlag>();
 
   if (issues) {
-    const grouped = new Map<string, number>();
+    const grouped = new Map<string, { count: number; severity: string }>();
     for (const issue of issues.validation_issues) {
       const key = `${issue.rule_name}::${issue.description}`;
-      grouped.set(key, (grouped.get(key) ?? 0) + 1);
+      const existing = grouped.get(key);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        grouped.set(key, { count: 1, severity: issue.severity.toLowerCase() });
+      }
     }
 
-    for (const [key, count] of grouped.entries()) {
+    for (const [key, groupedIssue] of grouped.entries()) {
       const [ruleName, description] = key.split("::");
       const blob = `${ruleName} ${description}`.toLowerCase();
-      if (blob.includes("cash rollforward") && count > 1) {
-        flags.push(`${ruleName}: ${count} occurrences detected. Check cash flow mapping and period alignment.`);
+      const level: FlagLevel = groupedIssue.severity === "error" ? "error" : "warning";
+
+      if (blob.includes("cash rollforward") && groupedIssue.count > 1) {
+        flags.set(key, {
+          message: `${ruleName}: ${groupedIssue.count} occurrences detected. Check cash flow mapping and period alignment.`,
+          level,
+        });
+        continue;
       }
-      if (count >= 5) {
-        flags.push(`${ruleName}: repeated ${count} times, indicating a systemic data quality issue.`);
+      if (groupedIssue.count >= 5) {
+        flags.set(key, {
+          message: `${ruleName}: repeated ${groupedIssue.count} times, indicating a systemic data quality issue.`,
+          level,
+        });
       }
     }
   }
 
   if (quality && quality.errors.length > 0) {
-    flags.push(`Quality engine reported ${quality.errors.length} error(s); prioritize reconciliation before decisions.`);
+    flags.set("quality-errors", {
+      message: `Quality engine reported ${quality.errors.length} error(s); prioritize reconciliation before decisions.`,
+      level: "error",
+    });
   }
 
-  return Array.from(new Set(flags)).slice(0, 5);
+  return Array.from(flags.values()).slice(0, 5);
 }
 
 function toneChipColor(tone: CategoryTone): "success" | "error" | "warning" | "default" {
@@ -376,9 +399,9 @@ export function SummaryInsightsPanel({ ratios, trends, issues, quality }: Props)
             ) : (
               <List dense disablePadding>
                 {flags.map((flag) => (
-                  <ListItem key={flag} sx={{ display: "list-item", py: 0.35 }}>
-                    <Typography variant="body2" color="error.main">
-                      {flag}
+                  <ListItem key={flag.message} sx={{ display: "list-item", py: 0.35 }}>
+                    <Typography variant="body2" color={flag.level === "error" ? "error.main" : "warning.main"}>
+                      {flag.message}
                     </Typography>
                   </ListItem>
                 ))}
